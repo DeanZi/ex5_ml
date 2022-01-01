@@ -110,3 +110,12 @@ if __name__ == '__main__':
     model = VGG().to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.01)
     train(model, optimizer, 10, False)
+
+    '''
+     TODO : 
+        1. Modify model and make_layers functions
+        2. Explain for report why CNN (piazza comment that spectrogram is equivalent to images) --> VGG19,
+         perhaps choose other good CNN (implemented in pytorch)
+        3. See all runs properly (hopefully 91%+)
+        4. Finish report and submit
+    '''
