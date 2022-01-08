@@ -1,9 +1,11 @@
+import ntpath
+
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 import numpy as np
 import os
-
+import time
 from gcommand_dataset import GCommandLoader
 import torch
 
@@ -16,18 +18,23 @@ class VGG(nn.Module):
     ) -> None:
         super().__init__()
         self.features = features
-        self.fc1 = nn.Linear(7680, 512)
-        self.fc2 = nn.Linear(512, 30)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Sequential(
+            nn.Linear(512, 512),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(512, num_classes),
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
+        x = self.avgpool(x)
         x = torch.flatten(x, 1)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        return x
+        x = self.classifier(x)
+        return F.log_softmax(x, dim=1)
 
 
-cfg = [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"]
+cfg = [64, "M", 128, "M", 256, 256, "M", 512, "M"]
 
 
 def make_layers(cfg, batch_norm: bool = False) -> nn.Sequential:
@@ -63,22 +70,28 @@ def validate(model, e):
     return validation_loss / len(validation_loader)
 
 
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
+
+
 def test(model):
     predictions = []
     model.eval()
-    for data in test_loader:
-        target = model(data)
+    for index, (data, label) in enumerate(test_loader):
+        target = model(data.to(device))
         _, prediction = target.max(1)
-        predictions.append(prediction)
+        test_file = path_leaf(dataset_test.spects[index][0])
+        predictions.append(test_file + ',' + classes[prediction])
     output_file = open('test_y', 'w')
     for y in predictions:
-        output_file.write(str(y.item()) + '\n')
+        output_file.write(y + '\n')
     output_file.close()
 
 
 def train(model, optimizer, epoch, with_validation, with_test=False):
     if with_validation:
-      best_validation_loss = np.inf
+        best_validation_loss = np.inf
     for e in range(epoch):
         train_loss = 0.0
         model.train()
@@ -95,31 +108,55 @@ def train(model, optimizer, epoch, with_validation, with_test=False):
         if with_validation:
             validation_loss = validate(model, e)
             if validation_loss <= best_validation_loss:
-               print('Saving state of model...')
-               best_validation_loss = validation_loss
-               if not os.path.isdir('current_state'):
-                  os.mkdir('current_state')
-               torch.save(model.state_dict(), 'current_state/model_state.pt')
-
+                print('Saving state of model...')
+                best_validation_loss = validation_loss
+                if not os.path.isdir('current_state'):
+                    os.mkdir('current_state')
+                torch.save(model.state_dict(), 'current_state/model_state.pt')
 
     if with_test:
         test(model)
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     dataset = GCommandLoader('data/train')
+    classes = dataset.classes
+    new_ds = []
+    index = 0
+    for element in dataset:
+        new_ds.append(element)
+        index += 1
+        if index == 50:
+            break
     train_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=256, shuffle=True,
+        new_ds, batch_size=256, shuffle=True,
         pin_memory=True)
 
     dataset = GCommandLoader('data/valid')
+    print(dataset.class_to_idx)
+    new_ds = []
+    index = 0
+    for element in dataset:
+        new_ds.append(element)
+        index += 1
+        if index == 50:
+            break
     validation_loader = torch.utils.data.DataLoader(
-        dataset, pin_memory=True)
+        new_ds, pin_memory=True)
 
-    # dataset = GCommandLoader('data/test')
-    # test_loader = torch.utils.data.DataLoader(
-        # dataset, pin_memory=True)
-
+    dataset_test = GCommandLoader('data/test')
+    new_ds = []
+    index = 0
+    for i, element in enumerate(dataset_test):
+        new_ds.append(element)
+        index += 1
+        if index == 50:
+            break
+    test_loader = torch.utils.data.DataLoader(
+        new_ds, pin_memory=True)
+    ent_time = time.time()
+    print(f"Data was loaded from {abs(start_time - ent_time)}")
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         device = torch.device("cuda")
@@ -127,4 +164,4 @@ if __name__ == '__main__':
         device = torch.device("cpu")
     model = VGG(make_layers(cfg, batch_norm=True), num_classes=30).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.01)
-    train(model, optimizer, 17, True)
+    train(model, optimizer, 2, True, with_test=True)
