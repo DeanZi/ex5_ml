@@ -74,7 +74,7 @@ def path_leaf(path):
 
 def test(model):
     predictions = []
-    model.load_state_dict(torch.load('current_state/model_state_new.pt'))
+    model.load_state_dict(torch.load('best_current_state_deanz/model_state_new.pt'))
     model.eval()
     for index, (data, label) in enumerate(test_loader):
         target = model(data.to(device)).to(device)
