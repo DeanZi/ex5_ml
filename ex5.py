@@ -109,9 +109,9 @@ def train(model, optimizer, epoch, with_validation, with_test=False):
             if validation_loss <= best_validation_loss:
                 print('Saving state of model...')
                 best_validation_loss = validation_loss
-                if not os.path.isdir('current_state'):
-                    os.mkdir('current_state')
-                torch.save(model.state_dict(), 'current_state/model_state_new.pt')
+                if not os.path.isdir('best_current_state_deanz'):
+                    os.mkdir('best_current_state_deanz')
+                torch.save(model.state_dict(), 'best_current_state_deanz/model_state_new.pt')
 
     if with_test:
         test(model)
