@@ -150,7 +150,7 @@ class GCommandLoader(data.Dataset):
 #
 # dataset = GCommandLoader('gcommands/train')
 #
-# train_loader = torch.utils.data.DataLoader(
+# train_loader = torch.utils.gcommands.DataLoader(
 #         dataset, batch_size=10, shuffle=True,
 #          pin_memory=True)
 #
