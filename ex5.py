@@ -81,6 +81,7 @@ def test(model):
         _, prediction = target.max(1)
         test_file = path_leaf(dataset_test.spects[index][0])
         predictions.append(test_file + ',' + classes[prediction])
+    predictions.sort(key=lambda predict: int(predict.split('.')[0]))
     output_file = open('test_y', 'w')
     for y in predictions:
         output_file.write(y + '\n')
