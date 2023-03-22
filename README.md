@@ -12,29 +12,8 @@ The model used in this implementation is based on the VGG architecture.
 The Google Speech Commands Dataset was used to train and evaluate the model. 
 The dataset consists of 30 short (1 second) audio clips, each of which corresponds to a different word.
 
-### How to run the model
 
-1.	Prerequisites:
+![Screen Shot 2023-03-22 at 21 38 25](https://user-images.githubusercontent.com/45519333/227017760-85a8b154-bf1d-4ee6-99f9-6d6e258bdac7.png)
 
-•	On the same directory you should have:
-o	My submitted files: ex5.py, gcommand_dataset.py
-o	The data in a folder named gcommands
-
-•	gcommands should be with the following content:
-o	test
-	file named as you wish
-•	6836.wav
-•	…
-•	…
-o	train 
-	bed
-	bird
-	…
-	…
-o	valid
-	bed
-	bird
-	…
-	…
-
-2.	After this, just run: `python3 ex5.py`
+### Author
+This code was written by *DeanZi* as part of a university programming project. Feel free to use and modify it as you like.
